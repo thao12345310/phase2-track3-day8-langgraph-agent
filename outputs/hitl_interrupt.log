@@ -1,0 +1,128 @@
+Real HITL demo — graph pauses at approval_node, resumes via Command(resume=...).
+Checkpointer: SqliteSaver(db=hitl_interrupt.db) with WAL mode.
+
+======================================================================
+Thread approve — first invoke (expect pause)
+======================================================================
+initial_state.query:
+  "Refund customer 12345 and send confirmation email"
+paused_state.__interrupt__:
+  [
+    "Interrupt(value={'proposed_action': \"Proposed risky action based on request: 'Refund customer 12345 and send confirmation email'. Risk level: high. Approval required before execution.\", 'risk_level': 'high'}, id='5394f2093891e38c6229e4b23a7b6b70')"
+  ]
+paused_state (excerpt):
+  {
+    "route": "risky",
+    "risk_level": "high",
+    "proposed_action": "Proposed risky action based on request: 'Refund customer 12345 and send confirmation email'. Risk level: high. Approval required before execution.",
+    "final_answer": null,
+    "events_so_far": [
+      "intake",
+      "classify",
+      "risky_action"
+    ]
+  }
+checkpoint snapshot:
+  {
+    "next": [
+      "approval"
+    ],
+    "pending_writes_count": 0,
+    "values.route": "risky",
+    "values.proposed_action": "Proposed risky action based on request: 'Refund customer 12345 and send confirmation email'. Risk level: high. Approval required before execution."
+  }
+
+======================================================================
+Thread approve — resume with decision
+======================================================================
+reviewer decision:
+  {
+    "approved": true,
+    "reviewer": "alice",
+    "comment": "verified ID"
+  }
+final_state (excerpt):
+  {
+    "route": "risky",
+    "approval": {
+      "approved": true,
+      "reviewer": "alice",
+      "comment": "verified ID"
+    },
+    "final_answer": "Action approved by alice. Result: mock-tool-result for scenario=BONUS_HITL_approve",
+    "pending_question": null,
+    "tool_results": [
+      "mock-tool-result for scenario=BONUS_HITL_approve"
+    ],
+    "events": [
+      "intake",
+      "classify",
+      "risky_action",
+      "approval",
+      "tool",
+      "evaluate",
+      "answer",
+      "finalize"
+    ]
+  }
+
+======================================================================
+Thread reject — first invoke (expect pause)
+======================================================================
+initial_state.query:
+  "Refund customer 12345 and send confirmation email"
+paused_state.__interrupt__:
+  [
+    "Interrupt(value={'proposed_action': \"Proposed risky action based on request: 'Refund customer 12345 and send confirmation email'. Risk level: high. Approval required before execution.\", 'risk_level': 'high'}, id='21b2c414b32aa6434396cb8875fe721a')"
+  ]
+paused_state (excerpt):
+  {
+    "route": "risky",
+    "risk_level": "high",
+    "proposed_action": "Proposed risky action based on request: 'Refund customer 12345 and send confirmation email'. Risk level: high. Approval required before execution.",
+    "final_answer": null,
+    "events_so_far": [
+      "intake",
+      "classify",
+      "risky_action"
+    ]
+  }
+checkpoint snapshot:
+  {
+    "next": [
+      "approval"
+    ],
+    "pending_writes_count": 0,
+    "values.route": "risky",
+    "values.proposed_action": "Proposed risky action based on request: 'Refund customer 12345 and send confirmation email'. Risk level: high. Approval required before execution."
+  }
+
+======================================================================
+Thread reject — resume with decision
+======================================================================
+reviewer decision:
+  {
+    "approved": false,
+    "reviewer": "bob",
+    "comment": "need manager OK"
+  }
+final_state (excerpt):
+  {
+    "route": "risky",
+    "approval": {
+      "approved": false,
+      "reviewer": "bob",
+      "comment": "need manager OK"
+    },
+    "final_answer": "Your request 'Refund customer 12345 and send confirmation email' is unclear. Could you provide more details such as an order ID, account number, or describe the issue more specifically?",
+    "pending_question": "Your request 'Refund customer 12345 and send confirmation email' is unclear. Could you provide more details such as an order ID, account number, or describe the issue more specifically?",
+    "tool_results": [],
+    "events": [
+      "intake",
+      "classify",
+      "risky_action",
+      "approval",
+      "clarify",
+      "finalize"
+    ]
+  }
