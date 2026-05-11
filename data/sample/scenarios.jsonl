@@ -5,3 +5,18 @@
 {"id":"S05_error","query":"Timeout failure while processing request","expected_route":"error","requires_approval":false,"should_retry":true,"tags":["retry"]}
 {"id":"S06_delete","query":"Delete customer account after support verification","expected_route":"risky","requires_approval":true,"should_retry":false,"tags":["hitl","destructive"]}
 {"id":"S07_dead_letter","query":"System failure cannot recover after multiple attempts","expected_route":"error","requires_approval":false,"should_retry":true,"max_attempts":1,"tags":["dead_letter","retry"]}
+{"id":"S08_cancel","query":"Cancel my subscription immediately","expected_route":"risky","requires_approval":true,"tags":["risky","cancel"]}
+{"id":"S09_remove","query":"Remove my payment method from the account","expected_route":"risky","requires_approval":true,"tags":["risky","remove"]}
+{"id":"S10_revoke","query":"Revoke API access for this application","expected_route":"risky","requires_approval":true,"tags":["risky","revoke"]}
+{"id":"S11_check","query":"Check delivery status for my package","expected_route":"tool","requires_approval":false,"tags":["tool","check"]}
+{"id":"S12_track","query":"Track my shipment number 98765","expected_route":"tool","requires_approval":false,"tags":["tool","track"]}
+{"id":"S13_find","query":"Find all invoices from last month","expected_route":"tool","requires_approval":false,"tags":["tool","find"]}
+{"id":"S14_search","query":"Search for available upgrade plans","expected_route":"tool","requires_approval":false,"tags":["tool","search"]}
+{"id":"S15_conflict","query":"Cancel and check the order status","expected_route":"risky","requires_approval":true,"tags":["priority","risky_over_tool"]}
+{"id":"S16_vague_this","query":"Help this please","expected_route":"missing_info","requires_approval":false,"tags":["clarification","pronoun"]}
+{"id":"S17_vague_that","query":"Fix that now","expected_route":"missing_info","requires_approval":false,"tags":["clarification","pronoun"]}
+{"id":"S18_crash","query":"Server crash during payment processing","expected_route":"error","requires_approval":false,"should_retry":true,"tags":["error","crash"]}
+{"id":"S19_unavailable","query":"Service unavailable please try again","expected_route":"error","requires_approval":false,"should_retry":true,"tags":["error","unavailable"]}
+{"id":"S20_simple_general","query":"What are your business hours?","expected_route":"simple","requires_approval":false,"tags":["simple"]}
+{"id":"S21_simple_faq","query":"How do I change my email address?","expected_route":"simple","requires_approval":false,"tags":["simple","faq"]}
+{"id":"S22_send_email","query":"Send a password reset link to my email","expected_route":"risky","requires_approval":true,"tags":["risky","send"]}

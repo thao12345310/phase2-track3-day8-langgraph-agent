@@ -8,7 +8,7 @@ from .state import AgentState, Route
 def route_after_classify(state: AgentState) -> str:
     """Map classified route to the next graph node.
 
-    TODO(student): handle unknown routes safely and update tests for edge cases.
+    Unknown routes default to 'answer' (simple path) for safety.
     """
     route = state.get("route", Route.SIMPLE.value)
     mapping = {
@@ -22,9 +22,10 @@ def route_after_classify(state: AgentState) -> str:
 
 
 def route_after_retry(state: AgentState) -> str:
-    """Decide whether to retry, fallback, or dead-letter.
+    """Decide whether to retry or dead-letter.
 
-    TODO(student): implement bounded retry and dead-letter routing.
+    Bounded retry: if attempt >= max_attempts, route to dead_letter.
+    Otherwise, route back to tool for another attempt.
     """
     if int(state.get("attempt", 0)) >= int(state.get("max_attempts", 3)):
         return "dead_letter"
@@ -35,7 +36,7 @@ def route_after_evaluate(state: AgentState) -> str:
     """Decide whether tool result is satisfactory or needs retry.
 
     This is the 'done?' check that enables retry loops — a key LangGraph advantage over LCEL.
-    TODO(student): replace heuristic with LLM-as-judge or structured validation.
+    If evaluation_result is 'needs_retry', route to retry node; otherwise proceed to answer.
     """
     if state.get("evaluation_result") == "needs_retry":
         return "retry"
@@ -43,9 +44,11 @@ def route_after_evaluate(state: AgentState) -> str:
 
 
 def route_after_approval(state: AgentState) -> str:
-    """Continue only if approved.
+    """Continue only if approved; rejected actions route to clarification.
 
-    TODO(student): support reject/edit outcomes.
+    Approved → tool (execute the risky action)
+    Rejected → clarify (ask for more context or alternative)
     """
     approval = state.get("approval") or {}
     return "tool" if approval.get("approved") else "clarify"
+

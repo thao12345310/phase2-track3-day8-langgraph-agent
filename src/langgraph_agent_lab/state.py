@@ -6,9 +6,9 @@ Students should extend the schema only when needed. Keep state lean and serializ
 from __future__ import annotations
 
 from enum import StrEnum
+from operator import add
 from typing import Annotated, Any, TypedDict
 
-from operator import add
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -39,10 +39,20 @@ class ApprovalDecision(BaseModel):
 
 
 class AgentState(TypedDict, total=False):
-    """LangGraph state.
+    """LangGraph state for the support-ticket agent.
 
-    TODO(student): decide which fields should be append-only and which should be overwritten.
-    The current annotations give a safe starting point for auditability.
+    Reducer strategy:
+    - **Append-only** (Annotated[list, add]): messages, tool_results, errors, events
+      → These accumulate across nodes for full audit trail. The `add` reducer
+        merges lists returned by each node into the existing list.
+    - **Overwrite** (no annotation): route, attempt, max_attempts, final_answer,
+      pending_question, proposed_action, approval, evaluation_result, risk_level
+      → These represent current state and are replaced by the latest node output.
+
+    Design rationale:
+    - `evaluation_result` gates the retry loop (needs_retry → retry, success → answer).
+    - `attempt` is overwritten (not accumulated) so routing can compare against max_attempts.
+    - `events` is the primary audit log used by metrics to count nodes visited.
     """
 
     thread_id: str
@@ -102,6 +112,11 @@ def initial_state(scenario: Scenario) -> AgentState:
     }
 
 
-def make_event(node: str, event_type: str, message: str, **metadata: Any) -> dict[str, Any]:
+def make_event(
+    node: str, event_type: str, message: str, **metadata: Any,  # noqa: ANN401
+) -> dict[str, Any]:
     """Create a normalized event payload."""
-    return LabEvent(node=node, event_type=event_type, message=message, metadata=metadata).model_dump()
+    return LabEvent(
+        node=node, event_type=event_type,
+        message=message, metadata=metadata,
+    ).model_dump()

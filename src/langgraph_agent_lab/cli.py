@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Annotated
 
@@ -33,8 +34,17 @@ def run_scenarios(
     for scenario in scenarios:
         state = initial_state(scenario)
         run_config = {"configurable": {"thread_id": state["thread_id"]}}
+        start_ns = time.perf_counter_ns()
         final_state = graph.invoke(state, config=run_config)
-        metrics.append(metric_from_state(final_state, scenario.expected_route.value, scenario.requires_approval))
+        latency_ms = (time.perf_counter_ns() - start_ns) // 1_000_000
+        metrics.append(
+            metric_from_state(
+                final_state,
+                scenario.expected_route.value,
+                scenario.requires_approval,
+                latency_ms=latency_ms,
+            )
+        )
     report = summarize_metrics(metrics)
     write_metrics(report, output)
     if cfg.get("report_path"):
@@ -54,3 +64,4 @@ def validate_metrics(metrics: Annotated[Path, typer.Option("--metrics")]) -> Non
 
 if __name__ == "__main__":
     app()
+
